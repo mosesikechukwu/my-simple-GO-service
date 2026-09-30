@@ -1,0 +1,22 @@
+services:
+  my-simple-service:
+    image: my-simple-service:1.0.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.my-simple-service.rule=Host(`my-simple-service.localhost`)"
+      - "traefik.http.routers.my-simple-service.entrypoints=web"
+      - "traefik.http.services.my-simple-service.loadbalancer.server.port=8080"
+
+  traefik:
+    image: traefik:v3.6
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
