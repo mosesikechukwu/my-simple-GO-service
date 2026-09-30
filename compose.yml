@@ -6,6 +6,12 @@ services:
       - "traefik.http.routers.my-simple-service.rule=Host(`my-simple-service.localhost`)"
       - "traefik.http.routers.my-simple-service.entrypoints=web"
       - "traefik.http.services.my-simple-service.loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   traefik:
     image: traefik:v3.6
