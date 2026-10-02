@@ -7,11 +7,19 @@ services:
       - "traefik.http.routers.my-simple-service.entrypoints=web"
       - "traefik.http.services.my-simple-service.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://192.168.1.121/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 5s
+
+  typescript-service:
+    image: typescript-service:1.0.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.typescript-service.rule=Host(`typescript.192.168.1.121`)"
+      - "traefik.http.routers.typescript-service.entrypoints=web"
+      - "traefik.http.services.typescript-service.loadbalancer.server.port=3000"
 
   traefik:
     image: traefik:v3.6
@@ -26,3 +34,14 @@ services:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
