@@ -3,11 +3,11 @@ services:
     image: my-simple-service:1.0.0
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.my-simple-service.rule=Host(`my-simple-service.localhost`)"
+      - "traefik.http.routers.my-simple-service.rule=Host(`192.168.1.121`)"
       - "traefik.http.routers.my-simple-service.entrypoints=web"
       - "traefik.http.services.my-simple-service.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "-qO-", "http://192.168.1.121/health"]
       interval: 30s
       timeout: 5s
       retries: 3
