@@ -1,148 +1,201 @@
 # My Simple Service
 
-A small Go HTTP service used as the foundation for a hands-on DevOps and infrastructure monitoring lab.
+A hands-on DevOps and infrastructure engineering lab built around a small Go HTTP service.
 
-The project progressively integrates:
+The project started as a simple HTTP application and is being progressively expanded into a multi-service environment for learning:
 
+* Linux
+* Git and GitHub
 * Go
+* TypeScript
 * Docker
 * Docker Compose
 * Traefik
-* Container health checks
-* Prometheus
-* Grafana
-* Loki
-* Sentry
-* Failure simulation
-* Incident investigation and recovery
-* Deployment and rollback practices
+* Networking
+* Health checks
+* Monitoring
+* Logging
+* Application error tracking
+* Incident response
+* Deployment
+* Rollback
+* Cloud infrastructure concepts
 
-## Current Architecture
+The goal is not just to build the application, but to learn how to **operate, monitor, troubleshoot, deploy, and recover services in a realistic environment.**
 
-```text
-                    Client
-                      |
-                      | HTTP
-                      v
-               +--------------+
-               |   Traefik    |
-               |    :80       |
-               +------+-------+
-                      |
-                Docker network
-                      |
-                      v
-               +--------------+
-               | Go Service   |
-               |    :8080     |
-               +------+-------+
-                      |
-                /health
-                      |
-                      v
-                {"status":"ok"}
-```
+---
 
-## Project Structure
+# Learning Journey
+
+This project is being built incrementally rather than all at once.
+
+Each stage introduces a new infrastructure or operational concept.
+
+## Stage 1 — Build a Simple Go Service
+
+The project started with a basic Go HTTP server.
+
+Initial functionality:
 
 ```text
-my-simple-service/
-├── Dockerfile
-├── compose.yml
-├── go.mod
-├── main.go
-└── README.md
+GET /
 ```
 
-## Application Endpoints
-
-### `/`
-
-Returns:
+Response:
 
 ```text
 Hello, World!
 ```
 
-### `/health`
+A health endpoint was then added:
 
-Returns:
+```text
+GET /health
+```
+
+Response:
 
 ```json
 {"status":"ok"}
 ```
 
-The health endpoint is used by the Docker health check.
+### What I learned
 
-## Running the Project
+* Basic Go HTTP servers
+* HTTP routes
+* Listening on ports
+* Health endpoints
+* Testing services with `curl`
+* The difference between an application and the infrastructure running it
 
-From this directory:
+---
 
-```bash
-docker compose up -d
+# Stage 2 — Containerize the Application
+
+The Go application was packaged into a Docker image.
+
+A multi-stage Dockerfile was introduced so that the application could be compiled in one image and run in a smaller runtime image.
+
+```text
+Go source code
+      |
+      v
+Builder container
+      |
+      | go build
+      v
+Compiled binary
+      |
+      v
+Runtime container
 ```
 
-Check the containers:
+### What I learned
 
-```bash
-docker compose ps
-```
+* Docker images
+* Containers
+* Dockerfiles
+* Build contexts
+* Multi-stage builds
+* Image tagging
+* Container ports
+* Container lifecycle
 
-Test the service through Traefik:
-
-```bash
-curl http://my-simple-service.localhost/health
-```
-
-Expected response:
-
-```json
-{"status":"ok"}
-```
-
-Stop the stack:
-
-```bash
-docker compose down
-```
-
-## Docker
-
-The application is packaged into a Docker image using a multi-stage Dockerfile.
-
-Build the image manually:
+Example:
 
 ```bash
 docker build -t my-simple-service:1.0.0 .
 ```
 
-The final container runs the compiled Go binary on port `8080`.
+Run the container:
 
-## Traefik
+```bash
+docker run -d \
+  --name my-simple-service \
+  -p 8080:8080 \
+  my-simple-service:1.0.0
+```
 
-Traefik acts as the reverse proxy for the application.
+---
 
-The routing configuration is defined through Docker labels in `compose.yml`.
+# Stage 3 — Docker Compose
 
-Requests to:
+The project was moved from manually running individual containers to Docker Compose.
+
+This made it possible to define the service infrastructure as configuration.
+
+```bash
+docker compose up -d
+```
+
+Check the environment:
+
+```bash
+docker compose ps
+```
+
+### What I learned
+
+* Compose services
+* Declarative infrastructure
+* Service configuration
+* Docker networking
+* Container lifecycle management
+* Environment reproducibility
+
+---
+
+# Stage 4 — Add Traefik
+
+Traefik was introduced as a reverse proxy.
+
+Instead of accessing the Go service directly:
+
+```text
+Client → Go :8080
+```
+
+traffic now flows through:
+
+```text
+Client
+   |
+   v
+Traefik :80
+   |
+   v
+Go Service :8080
+```
+
+Traefik discovers the service through Docker labels.
+
+Example:
 
 ```text
 http://my-simple-service.localhost
 ```
 
-are routed by Traefik to the Go application on port `8080`.
-
-## Health Check
-
-Docker periodically requests:
+is routed to:
 
 ```text
-http://localhost:8080/health
+Go Service :8080
 ```
 
-The container is considered healthy when the endpoint responds successfully.
+### What I learned
 
-Health-check configuration:
+* Reverse proxies
+* HTTP routing
+* Docker labels
+* Entry points
+* Service discovery
+* Layer 7 routing
+* The difference between an application port and an exposed entry point
+
+---
+
+# Stage 5 — Health Checks
+
+A Docker health check was added to determine whether the application is actually responding.
 
 ```yaml
 healthcheck:
@@ -153,95 +206,479 @@ healthcheck:
   start_period: 5s
 ```
 
-This allows us to distinguish between:
+This introduced an important operational distinction:
 
 ```text
 Container running
-```
-
-and:
-
-```text
+        ≠
 Application healthy
 ```
 
-## DevOps Learning Objectives
+A container can be running while the application inside it is broken.
 
-This project is intentionally being developed incrementally to simulate a real service-management workflow.
+### What I learned
 
-The planned progression is:
+* Application health
+* Container health
+* Health endpoints
+* Automated health checks
+* Basic service monitoring concepts
 
-1. Build the application
-2. Containerize the application
-3. Manage it with Docker Compose
-4. Route traffic through Traefik
-5. Add health checks
-6. Collect application and infrastructure metrics with Prometheus
-7. Visualize metrics with Grafana
-8. Collect and search logs with Loki
-9. Track application errors with Sentry
-10. Simulate service failures
-11. Investigate incidents
-12. Recover failed services
-13. Implement deployment and rollback procedures
-14. Expand the setup into multiple services
+---
 
-## Useful Commands
+# Stage 6 — Add a TypeScript Microservice
 
-Check running containers:
+The project is now being expanded beyond a single service.
+
+A second microservice is being developed using TypeScript and Express.
+
+```text
+                    Traefik
+                       |
+             +---------+---------+
+             |                   |
+             v                   v
+       Go Service        TypeScript Service
+          :8080                :3000
+```
+
+The TypeScript service currently provides:
+
+```text
+GET /
+GET /health
+GET /api/status
+```
+
+Example:
+
+```json
+{
+  "service": "typescript-service",
+  "status": "running"
+}
+```
+
+### What I learned
+
+* TypeScript compilation
+* Node.js services
+* Express
+* `package.json`
+* `tsconfig.json`
+* Build vs runtime dependencies
+* Multi-stage Node.js Docker builds
+* Running multiple services
+* Port conflicts
+
+A real operational issue occurred when port `3000` was already being used by a locally running Node process.
+
+This reinforced the concept that:
+
+```text
+Host port → Container port
+```
+
+and that two processes cannot normally bind to the same host port.
+
+---
+
+# Current Architecture
+
+The architecture is currently evolving toward:
+
+```text
+                         Client
+                           |
+                           v
+                       Traefik
+                         :80
+                           |
+                 Docker network
+                    /          \
+                   /            \
+                  v              v
+           Go Service      TypeScript Service
+              :8080              :3000
+                  \              /
+                   \            /
+                    \          /
+                     Monitoring
+```
+
+The next stage is to integrate both services into the same Compose environment and route them through Traefik.
+
+---
+
+# Planned Monitoring Architecture
+
+The monitoring layer will progressively introduce:
+
+```text
+                    Applications
+                         |
+              +----------+----------+
+              |          |          |
+              v          v          v
+         Prometheus     Loki      Sentry
+              |          |          |
+              +----------+----------+
+                         |
+                         v
+                       Grafana
+```
+
+### Prometheus
+
+Used for metrics such as:
+
+* CPU usage
+* Memory usage
+* Request counts
+* Request latency
+* Service availability
+
+### Loki
+
+Used for:
+
+* Application logs
+* Container logs
+* Searching historical events
+* Investigating incidents
+
+### Grafana
+
+Used to visualize:
+
+* Metrics
+* Logs
+* Service health
+* Dashboards
+* Operational trends
+
+### Sentry
+
+Used for application-level errors and exceptions.
+
+---
+
+# Incident Response Learning
+
+A major goal of this project is learning what happens when things break.
+
+Instead of only learning how to make services work, I will intentionally introduce failures and investigate them.
+
+Examples:
+
+```text
+Stop a container
+      ↓
+Detect failure
+      ↓
+Check service status
+      ↓
+Inspect logs
+      ↓
+Check health
+      ↓
+Identify root cause
+      ↓
+Recover service
+      ↓
+Verify recovery
+      ↓
+Document incident
+```
+
+Planned failure scenarios include:
+
+* Container stopped
+* Application crash
+* Failed health check
+* HTTP 500 errors
+* Broken configuration
+* Port conflicts
+* Failed deployment
+* Resource problems
+* Reverse-proxy routing problems
+* Broken service dependencies
+
+---
+
+# Deployment and Rollback
+
+The project will eventually simulate a basic production deployment workflow:
+
+```text
+Developer changes code
+        |
+        v
+Git commit
+        |
+        v
+Build
+        |
+        v
+Docker image
+        |
+        v
+Deploy
+        |
+        v
+Health check
+        |
+        +---- Healthy ----> Continue
+        |
+        +---- Failed -----> Investigate / Rollback
+```
+
+The goal is to understand not only how to deploy a service, but also what to do when a deployment fails.
+
+---
+
+# Security Considerations
+
+**SECURITY CONSCIOUS**
+
+This lab intentionally exposes and experiments with infrastructure components, but production systems should not be configured exactly like a learning environment.
+
+Important areas I am learning to consider include:
+
+* Avoiding unnecessary exposed ports
+* Protecting administrative dashboards
+* Limiting Docker socket access
+* Managing secrets safely
+* Using HTTPS/TLS
+* Authentication and authorization
+* Network segmentation
+* Least-privilege access
+* Secure container configuration
+* Monitoring suspicious activity
+
+For example, directly publishing:
+
+```bash
+-p 3000:3000
+```
+
+is useful for local testing, but the eventual architecture should prefer:
+
+```text
+Client
+   |
+   v
+Traefik
+   |
+   +----> Go Service
+   |
+   +----> TypeScript Service
+```
+
+rather than exposing every microservice directly to the network.
+
+---
+
+# Git and GitHub Learning
+
+The project is also being used to practice a real Git workflow.
+
+The basic workflow is:
+
+```text
+Working directory
+       |
+       v
+git add
+       |
+       v
+Staging area
+       |
+       v
+git commit
+       |
+       v
+Local repository
+       |
+       v
+git push
+       |
+       v
+GitHub
+```
+
+Useful commands:
+
+```bash
+git status
+git diff
+git add .
+git diff --cached
+git commit
+git push
+```
+
+The goal is to understand what each Git operation does rather than relying on automated workflows without understanding the underlying process.
+
+---
+
+# Project Structure
+
+Current project structure:
+
+```text
+my-simple-service/
+├── Dockerfile
+├── compose.yml
+├── go.mod
+├── main.go
+├── typescript-service/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tsconfig.json
+│   └── src/
+│       └── index.ts
+└── README.md
+```
+
+---
+
+# Useful Commands
+
+## Start the environment
+
+```bash
+docker compose up -d
+```
+
+## Check services
 
 ```bash
 docker compose ps
 ```
 
-View application logs:
+## View logs
 
 ```bash
-docker compose logs my-simple-service
+docker compose logs
 ```
 
-View Traefik logs:
-
-```bash
-docker compose logs traefik
-```
-
-Follow logs:
+## Follow logs
 
 ```bash
 docker compose logs -f
 ```
 
-Validate Compose configuration:
+## View a specific service
+
+```bash
+docker compose logs my-simple-service
+```
+
+## Validate Compose configuration
 
 ```bash
 docker compose config --quiet
 ```
 
-Stop and remove the Compose stack:
+## Stop the environment
 
 ```bash
 docker compose down
 ```
 
-## Status
+## Check Docker containers
 
-Current components:
+```bash
+docker ps
+```
 
-* [x] Go HTTP service
+## Check Docker images
+
+```bash
+docker images
+```
+
+---
+
+# Current Status
+
+## Completed
+
+* [x] Basic Go HTTP service
+* [x] `/health` endpoint
 * [x] Dockerfile
+* [x] Multi-stage Go Docker build
 * [x] Docker image
 * [x] Docker Compose
 * [x] Traefik reverse proxy
 * [x] Traefik routing
 * [x] Docker health check
-* [ ] Prometheus
-* [ ] Grafana
-* [ ] Loki
-* [ ] Sentry
-* [ ] Failure simulation
-* [ ] Incident response exercises
-* [ ] Deployment automation
-* [ ] Rollback workflow
-* [ ] Multiple-service architecture
+* [x] LAN connectivity testing
+* [x] Git/GitHub workflow
+* [x] TypeScript service
+* [x] TypeScript health endpoint
+* [x] TypeScript Dockerfile
+* [x] TypeScript Docker image
+* [x] Running multiple services
 
+## In Progress
+
+* [ ] Integrate TypeScript service into Docker Compose
+* [ ] Route both services through Traefik
+* [ ] Improve service networking
+* [ ] Add Prometheus
+* [ ] Add Grafana
+* [ ] Add Loki
+* [ ] Add Sentry
+
+## Planned
+
+* [ ] Host monitoring
+* [ ] Node Exporter
+* [ ] Service dashboards
+* [ ] Failure simulation
+* [ ] Incident investigation
+* [ ] Incident documentation
+* [ ] Deployment workflow
+* [ ] Rollback workflow
+* [ ] Cloudflare integration
+* [ ] Expand the architecture with additional services
+* [ ] Introduce CI/CD
+
+---
+
+# What This Project Is Teaching Me
+
+The main objective is to move beyond simply knowing individual tools.
+
+I am learning how the pieces work together:
+
+```text
+Application
+    ↓
+Container
+    ↓
+Docker Compose
+    ↓
+Networking
+    ↓
+Reverse Proxy
+    ↓
+Monitoring
+    ↓
+Logging
+    ↓
+Error Tracking
+    ↓
+Incident Response
+    ↓
+Deployment
+    ↓
+Rollback
+```
+
+The project is intentionally being built step-by-step so that each new component solves a real operational problem introduced by the previous stage.
+
+This repository documents that progression from a simple HTTP server toward a small, observable, multi-service infrastructure environment.
