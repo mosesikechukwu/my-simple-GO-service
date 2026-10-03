@@ -43,5 +43,18 @@ services:
 
   node-exporter:
     image: prom/node-exporter:latest
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro"
     ports:
       - "9100:9100"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+volumes:
+  grafana-data:
