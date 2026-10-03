@@ -682,3 +682,85 @@ Rollback
 The project is intentionally being built step-by-step so that each new component solves a real operational problem introduced by the previous stage.
 
 This repository documents that progression from a simple HTTP server toward a small, observable, multi-service infrastructure environment.
+
+### Monitoring & Observability
+
+Added a basic monitoring stack for the services in this lab.
+
+#### Current Stack
+
+* **Prometheus** — collects and stores metrics
+* **Node Exporter** — exposes host-level metrics such as CPU, memory, disk, and network usage
+* **Grafana** — visualizes collected metrics through dashboards
+* **Go Prometheus Client** — exposes application/runtime metrics from the Go service
+* **Traefik** — reverse proxy and HTTP routing layer
+
+#### Monitoring Flow
+
+```text
+Host
+ │
+ └── Node Exporter
+        │
+        │ host metrics
+        ↓
+     Prometheus
+        │
+        │ time-series data
+        ↓
+      Grafana
+```
+
+Application monitoring:
+
+```text
+Go Service
+    │
+    └── /metrics
+          │
+          ↓
+      Prometheus
+          │
+          ↓
+       Grafana
+```
+
+#### Metrics Currently Monitored
+
+**Infrastructure:**
+
+* CPU utilization
+* Memory utilization
+* Disk utilization
+* Network receive traffic
+* Network transmit traffic
+
+**Go Application:**
+
+* Go runtime metrics
+* Goroutine count
+* Process/runtime metrics
+* `/health` endpoint
+* `/metrics` endpoint
+
+#### Prometheus Targets
+
+The current Prometheus configuration monitors:
+
+```text
+prometheus       → UP
+node-exporter    → UP
+go-service       → UP
+```
+
+This project has now progressed from simply running containers to monitoring both **infrastructure health and application-level metrics**.
+
+### Next Monitoring Goals
+
+* Add application request counters
+* Monitor HTTP status codes and errors
+* Monitor request latency
+* Configure Prometheus alerting rules
+* Add centralized logging with Loki
+* Explore application error monitoring with Sentry
+* Explore distributed tracing
