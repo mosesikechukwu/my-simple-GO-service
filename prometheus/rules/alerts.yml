@@ -1,0 +1,11 @@
+groups:
+  - name: service-alerts
+    rules:
+      - alert: GoServiceDown
+        expr: up{job="go-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Go service is down"
+          description: "Prometheus has been unable to scrape the Go service for more than 1 minute."
